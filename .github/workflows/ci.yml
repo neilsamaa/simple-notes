@@ -25,6 +25,9 @@ jobs:
 
     - name: Push Docker Image
       run: docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+    
+    - name: Logout from Docker Hub
+      run: docker logout
 
   deploy:
     runs-on: ubuntu-latest
@@ -48,8 +51,14 @@ jobs:
           docker rm $CONTAINER_NAME
         fi
 
+    - name: Login to Docker Hub
+      run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
     - name: Pull Docker Image on Server
       run: docker pull $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
 
     - name: Run Docker Container on Server
       run: docker run -d --name $CONTAINER_NAME -p 8000:8000 $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+
+    - name: Logout from Docker Hub
+      run: docker logout
