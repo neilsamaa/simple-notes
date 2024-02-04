@@ -20,8 +20,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Login to Docker Hub
-      run: echo ${{ secrets.DOCKER_TOKEN }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-      # run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Build Docker Image
       run: docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
@@ -31,3 +30,31 @@ jobs:
     
     - name: Logout from Docker Hub
       run: docker logout
+    
+    - name: Deploy Container to Server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: ${{ secrets.SERVER_SSH_PORT }}
+        envs: DOCKER_IMAGE_TAG, DOCKER_IMAGE_NAME, CONTAINER_NAME
+        script: |
+          # Check if Container Exists
+          if docker ps -a --format '{{.Names}}' | grep -Eq "^$CONTAINER_NAME$"; then
+            echo "Container $CONTAINER_NAME exists, stopping and removing..."
+            docker stop $CONTAINER_NAME
+            docker rm $CONTAINER_NAME
+          fi
+
+          # Login to Docker Hub
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+          # Pull Docker Image on Server
+          docker pull $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+
+          # Run Docker Container on Server
+          docker run -d --name $CONTAINER_NAME -p 8000:8000 $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+
+          # Logout from Docker Hub
+          docker logout
