@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . .
 
 # Build the Golang binary
-RUN go build -o aplikasi-notes-go .
+RUN go build -o main .
 
 # Set the startup command to run the Golang binary
-CMD ["./aplikasi-notes-go"]
+CMD ["./main"]
