@@ -1,4 +1,4 @@
-# Aplikasi Notes Go
+# Simple Notes Go
 
 
 
