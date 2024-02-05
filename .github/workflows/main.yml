@@ -11,7 +11,7 @@ env:
   DOCKER_IMAGE_NAME: simple-notes
   CONTAINER_NAME: simple-notes
   CONTAINER_PORT: 8000:8000
-  REGISTRY: ghcr.io
+  REGISTRY: registry.gitlab.com
 
 jobs:
   build-push-deploy:
@@ -21,17 +21,17 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Login to Docker Hub
-      #run: docker login -u ${{ github.actor }} -p ${{ secrets.GH_PAT }}
-      run: echo ${{ secrets.GH_PAT }} | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
+    - name: Login to GitLab Registry
+      #run: docker login -u ${{ secrets.GITLAB_USERNAME }} -p ${{ secrets.GITLAB_TOKEN }}
+      run: echo ${{ secrets.GITLAB_TOKEN }} | docker login $REGISTRY -u ${{ secrets.GITLAB_USERNAME }} --password-stdin
 
     - name: Build Docker Image
-      run: docker build -t $REGISTRY/${{ github.actor }}/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
+      run: docker build -t $REGISTRY/${{ secrets.GITLAB_USERNAME }}/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
 
     - name: Push Docker Image
-      run: docker push $REGISTRY/${{ github.actor }}/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+      run: docker push $REGISTRY/${{ secrets.GITLAB_USERNAME }}/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
     
-    - name: Logout from Docker Hub
+    - name: Logout from GitLab Registry
       run: docker logout $REGISTRY
     
     - name: Deploy Container to Server
@@ -50,15 +50,15 @@ jobs:
             docker rm $CONTAINER_NAME
           fi
 
-          # Login to Docker Hub
-          #docker login -u ${{ github.actor }} -p ${{ secrets.DOCKER_PASSWORD }}
-          echo ${{ secrets.GH_PAT }} | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
+          # Login to GitLab Registry
+          #docker login -u ${{ secrets.GITLAB_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          echo ${{ secrets.GITLAB_TOKEN }} | docker login $REGISTRY -u ${{ secrets.GITLAB_USERNAME }} --password-stdin
 
           # Pull Docker Image on Server
-          docker pull $REGISTRY/${{ github.actor }}/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+          docker pull $REGISTRY/${{ secrets.GITLAB_USERNAME }}/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
 
           # Run Docker Container on Server
-          docker run -d --name $CONTAINER_NAME -p $CONTAINER_PORT $REGISTRY/${{ github.actor }}/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+          docker run -d --name $CONTAINER_NAME -p $CONTAINER_PORT $REGISTRY/${{ secrets.GITLAB_USERNAME }}/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
 
-          # Logout from Docker Hub
+          # Logout from GitLab Registry
           docker logout $REGISTRY
