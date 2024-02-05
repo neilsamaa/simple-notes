@@ -8,7 +8,7 @@ on:
 
 env:
   DOCKER_IMAGE_TAG: latest
-  DOCKER_IMAGE_NAME: simple-notes
+  DOCKER_IMAGE_NAME: aplikasi-notes-go
   CONTAINER_NAME: simple-notes
   CONTAINER_PORT: 8000:8000
   REGISTRY: registry.gitlab.com
